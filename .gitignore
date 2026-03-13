@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+.venv/
+venv/
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+logs/*.log
+
+# Vector store data
+vector_store/*.faiss
+vector_store/*.pkl
+
+# Generated projects (large)
+generated_projects/*/
+
+# Node.js
+node_modules/
+.next/
+out/
+
+# Docker
+*.tar
+
+# OS
+.DS_Store
+Thumbs.db

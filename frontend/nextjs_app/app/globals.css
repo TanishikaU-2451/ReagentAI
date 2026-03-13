@@ -1,0 +1,165 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #030712;
+    --foreground: #f9fafb;
+    --muted: #1f2937;
+    --muted-foreground: #9ca3af;
+    --border: #374151;
+    --accent: #6366f1;
+    --accent-foreground: #e0e7ff;
+    --destructive: #ef4444;
+    --success: #22c55e;
+    --warning: #eab308;
+    --info: #3b82f6;
+  }
+
+  * {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+  }
+
+  html,
+  body {
+    max-width: 100vw;
+    overflow-x: hidden;
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+      'Helvetica Neue', Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Custom scrollbar styles */
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #374151 transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: #374151;
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: #4b5563;
+  }
+}
+
+/* Mermaid diagram styling */
+.mermaid {
+  background: transparent !important;
+}
+
+.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node polygon {
+  fill: #1e1b4b !important;
+  stroke: #6366f1 !important;
+  stroke-width: 2px !important;
+}
+
+.mermaid .edgePath .path {
+  stroke: #818cf8 !important;
+  stroke-width: 2px !important;
+}
+
+.mermaid .edgeLabel {
+  background-color: #111827 !important;
+  color: #d1d5db !important;
+}
+
+.mermaid text {
+  fill: #e5e7eb !important;
+  font-size: 14px !important;
+}
+
+.mermaid .label {
+  color: #e5e7eb !important;
+}
+
+.mermaid .cluster rect {
+  fill: #1f2937 !important;
+  stroke: #4b5563 !important;
+}
+
+.mermaid .cluster text {
+  fill: #9ca3af !important;
+}
+
+/* Code block styling */
+.code-block {
+  counter-reset: line;
+}
+
+.code-block .line::before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 3em;
+  padding-right: 1em;
+  text-align: right;
+  color: #4b5563;
+  user-select: none;
+}
+
+/* Drop zone animation */
+@keyframes borderDash {
+  0% {
+    background-position: 0 0, 100% 0, 100% 100%, 0 100%;
+  }
+  100% {
+    background-position: 100% 0, 100% 100%, 0 100%, 0 0;
+  }
+}
+
+.drop-zone-active {
+  background-size: 200% 2px, 2px 200%, 200% 2px, 2px 200%;
+  background-position: 0 0, 100% 0, 100% 100%, 0 100%;
+  background-repeat: no-repeat;
+  background-image:
+    linear-gradient(90deg, #6366f1 50%, transparent 50%),
+    linear-gradient(180deg, #6366f1 50%, transparent 50%),
+    linear-gradient(90deg, #6366f1 50%, transparent 50%),
+    linear-gradient(180deg, #6366f1 50%, transparent 50%);
+  animation: borderDash 1s linear infinite;
+}
+
+/* Loading spinner */
+@keyframes spinnerRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+  animation: spinnerRotate 1s linear infinite;
+}
+
+/* Transition utilities */
+.transition-panel {
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}

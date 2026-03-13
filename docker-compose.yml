@@ -1,0 +1,97 @@
+# =============================================================================
+# ReagentAI Docker Compose Configuration
+# =============================================================================
+# Orchestrates all services required to run ReagentAI locally or in
+# production.
+#
+# Services:
+#   backend   - FastAPI application served by Uvicorn (port 8000)
+#   frontend  - Next.js application (port 3000)
+#   sandbox   - Lightweight Python container used by the backend to execute
+#               generated code in an isolated environment via `docker exec`
+#
+# Usage:
+#   docker compose up --build        # Build images and start all services
+#   docker compose up -d             # Start in detached mode
+#   docker compose down              # Stop and remove containers
+#   docker compose logs -f backend   # Follow backend logs
+# =============================================================================
+
+version: "3.9"
+
+services:
+  # ---------------------------------------------------------------------------
+  # Backend -- FastAPI / Uvicorn
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: .                       # Root context so requirements.txt and
+      dockerfile: Dockerfile           # backend/ are both accessible.
+    container_name: reagentai-backend
+    ports:
+      - "8000:8000"                    # Expose the API on the host.
+    env_file:
+      - .env                           # Load secrets and configuration from
+                                       # the root .env file.
+    volumes:
+      # Persist generated projects and vector store data across container
+      # restarts so that work is not lost.
+      - ./generated_projects:/app/generated_projects
+      - ./vector_store:/app/vector_store
+    depends_on:
+      - sandbox                        # Ensure the sandbox container is
+                                       # running before the backend starts.
+    networks:
+      - reagentai-network
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Frontend -- Next.js
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend/nextjs_app   # Build from the frontend Dockerfile.
+      dockerfile: Dockerfile
+    container_name: reagentai-frontend
+    ports:
+      - "3000:3000"                    # Expose the UI on the host.
+    environment:
+      # Point the frontend at the backend service.  Within the Docker network
+      # the backend is reachable by its service name.
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+    depends_on:
+      - backend                        # Wait for the backend to be available.
+    networks:
+      - reagentai-network
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Sandbox -- Isolated Python execution environment
+  # ---------------------------------------------------------------------------
+  # The sandbox container is a long-lived Python image that the backend uses
+  # to run generated code safely.  The backend communicates with it via
+  # `docker exec` calls.  It is intentionally kept running with a sleep loop
+  # so it is always available.
+  #
+  # SECURITY: privileged mode is disabled.  The sandbox should not have
+  # elevated host access.
+  # ---------------------------------------------------------------------------
+  sandbox:
+    image: python:3.11-slim
+    container_name: reagentai-sandbox
+    # Keep the container alive so the backend can exec into it at any time.
+    command: ["sh", "-c", "while true; do sleep 3600; done"]
+    privileged: false                  # Do NOT grant host-level privileges.
+    networks:
+      - reagentai-network
+    restart: unless-stopped
+
+# =============================================================================
+# Networks
+# =============================================================================
+# A dedicated bridge network so all ReagentAI services can communicate by
+# container name while remaining isolated from other Docker workloads.
+# =============================================================================
+networks:
+  reagentai-network:
+    driver: bridge
