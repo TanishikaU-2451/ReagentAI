@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test Upload</title>
+</head>
+
+<body>
+    <h1>Test ReagentAI Upload</h1>
+    <input type="file" id="fileInput" accept=".pdf">
+    <button onclick="testUpload()">Test Upload</button>
+    <div id="result"></div>
+
+    <script>
+        async function testUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const resultDiv = document.getElementById('result');
+
+            if (!fileInput.files[0]) {
+                resultDiv.innerHTML = '<p style="color: red;">Please select a PDF file first</p>';
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                resultDiv.innerHTML = '<p>Uploading...</p>';
+
+                const response = await fetch('http://localhost:8000/api/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <p style="color: green;">Success!</p>
+                        <p>Project ID: ${result.project_id}</p>
+                        <p>Message: ${result.message}</p>
+                        <a href="http://localhost:3002/dashboard/${result.project_id}" target="_blank">Go to Dashboard</a>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p style="color: red;">Error: ${result.detail || result.message}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">Network Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+
+</html>
