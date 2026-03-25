@@ -223,22 +223,18 @@ IMPLEMENTATION STEPS:
             prev_summary = "\n\n".join(summaries)[:4000]
 
         system_instruction = (
-            "You are an expert ML engineer who writes clean, well-documented, "
-            "production-quality Python code. Generate the COMPLETE file content "
-            "for the requested file. Output ONLY the file content -- no "
-            "markdown fences, no commentary before or after the code."
+            "You are an ML engineer. Generate complete, runnable Python code. "
+            "Output ONLY the code - no markdown, no explanations."
         )
 
         user_message = f"""{shared_context}
 
----
-
-FILE TO GENERATE: {filepath}
+FILE: {filepath}
 PURPOSE: {file_description}
 
 """
         if prev_summary:
-            user_message += f"""ALREADY GENERATED FILES (for reference / imports):
+            user_message += f"""ALREADY GENERATED (for reference):
 {prev_summary}
 
 """
@@ -246,13 +242,8 @@ PURPOSE: {file_description}
         user_message += self._file_specific_instructions(filepath)
 
         user_message += """
-IMPORTANT:
-- Output ONLY the raw file content. No ```python fences. No explanation.
-- The code must be complete and runnable.
-- Use type hints throughout.
-- Include docstrings for all classes and public methods.
-- Use PyTorch for model code.
-- Follow PEP 8 conventions."""
+Output ONLY the raw code. No ```python fences. No explanations.
+Use PyTorch. Include type hints and docstrings. Follow PEP 8."""
 
         prompt = self._build_prompt(system_instruction, user_message)
 

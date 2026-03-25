@@ -37,31 +37,31 @@ class Settings(BaseSettings):
 
     # Agent Models
     research_agent_model: str = Field(
-        default="meta-llama/Meta-Llama-3-8B-Instruct", env="RESEARCH_AGENT_MODEL"
+        default="meta-llama/Llama-3.2-1B-Instruct", env="RESEARCH_AGENT_MODEL"
     )
     planning_agent_model: str = Field(
-        default="mistralai/Mixtral-8x7B-Instruct-v0.1", env="PLANNING_AGENT_MODEL"
+        default="meta-llama/Llama-3.2-1B-Instruct", env="PLANNING_AGENT_MODEL"
     )
     architecture_agent_model: str = Field(
-        default="mistralai/Mixtral-8x7B-Instruct-v0.1", env="ARCHITECTURE_AGENT_MODEL"
+        default="meta-llama/Llama-3.2-1B-Instruct", env="ARCHITECTURE_AGENT_MODEL"
     )
     coding_agent_model: str = Field(
-        default="meta-llama/CodeLlama-34b-Instruct-hf", env="CODING_AGENT_MODEL"
+        default="meta-llama/Llama-3.2-1B-Instruct", env="CODING_AGENT_MODEL"
     )
     debug_agent_model: str = Field(
-        default="meta-llama/CodeLlama-34b-Instruct-hf", env="DEBUG_AGENT_MODEL"
+        default="meta-llama/Llama-3.2-1B-Instruct", env="DEBUG_AGENT_MODEL"
     )
     chat_agent_model: str = Field(
-        default="meta-llama/Meta-Llama-3-8B-Instruct", env="CHAT_AGENT_MODEL"
+        default="meta-llama/Llama-3.2-1B-Instruct", env="CHAT_AGENT_MODEL"
     )
     testing_agent_model: str = Field(
-        default="meta-llama/CodeLlama-34b-Instruct-hf", env="TESTING_AGENT_MODEL"
+        default="meta-llama/Llama-3.2-1B-Instruct", env="TESTING_AGENT_MODEL"
     )
     validation_agent_model: str = Field(
-        default="meta-llama/CodeLlama-34b-Instruct-hf", env="VALIDATION_AGENT_MODEL"
+        default="meta-llama/Llama-3.2-1B-Instruct", env="VALIDATION_AGENT_MODEL"
     )
     diagram_agent_model: str = Field(
-        default="mistralai/Mixtral-8x7B-Instruct-v0.1", env="DIAGRAM_AGENT_MODEL"
+        default="meta-llama/Llama-3.2-1B-Instruct", env="DIAGRAM_AGENT_MODEL"
     )
 
     # Logging

@@ -1,27 +1,26 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'next/navigation';
-import {
-  Download,
-  MessageSquare,
-  Code2,
-  GitFork,
-  CheckCircle2,
-  BarChart3,
-  Loader2,
-  FileText,
-  AlertCircle,
-  X,
-} from 'lucide-react';
-import { useWebSocket } from '@/lib/websocket';
-import { api } from '@/lib/api';
 import AgentProgressViewer from '@/components/AgentProgressViewer';
-import CodeViewer from '@/components/CodeViewer';
-import LogsPanel from '@/components/LogsPanel';
 import ArchitectureDiagramViewer from '@/components/ArchitectureDiagramViewer';
 import ChatInterface from '@/components/ChatInterface';
+import CodeViewer from '@/components/CodeViewer';
 import DownloadProject from '@/components/DownloadProject';
+import LogsPanel from '@/components/LogsPanel';
+import { api } from '@/lib/api';
+import { useWebSocket } from '@/lib/websocket';
+import {
+    AlertCircle,
+    BarChart3,
+    CheckCircle2,
+    Code2,
+    FileText,
+    GitFork,
+    Loader2,
+    MessageSquare,
+    X,
+} from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 interface PipelineStage {
   name: string;
@@ -60,13 +59,14 @@ const tabs: { id: TabId; label: string; icon: React.ElementType }[] = [
 
 export default function DashboardPage() {
   const params = useParams();
+  const router = useRouter();
   const projectId = params.id as string;
 
   const [activeTab, setActiveTab] = useState<TabId>('code');
   const [chatOpen, setChatOpen] = useState(false);
   const [project, setProject] = useState<ProjectInfo>({
     id: projectId,
-    title: 'Loading...',
+    title: 'Initializing pipeline...',
     status: 'processing',
     paperFilename: '',
     stages: [],
@@ -76,6 +76,34 @@ export default function DashboardPage() {
   const [scoreData, setScoreData] = useState<any>(null);
 
   const { messages, connectionStatus } = useWebSocket(projectId);
+
+  // Handle 'latest' redirect to actual project ID
+  useEffect(() => {
+    if (projectId === 'latest') {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/projects/latest`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.project_id) {
+            router.replace(`/dashboard/${data.project_id}`);
+          }
+        })
+        .catch(err => {
+          console.error('Failed to resolve latest project ID:', err);
+        });
+    }
+  }, [projectId, router]);
+
+  // Initialize logs on client side only to prevent hydration mismatch
+  useEffect(() => {
+    setLogs([
+      {
+        timestamp: new Date().toISOString(),
+        level: 'INFO',
+        message: '✓ Paper uploaded successfully. Starting multi-agent pipeline...',
+        agent: 'System',
+      },
+    ]);
+  }, []); // Only run once on mount
 
   // Process WebSocket messages
   useEffect(() => {
@@ -211,63 +239,50 @@ export default function DashboardPage() {
     }
   }, [activeTab, projectId, scoreData]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'text-emerald-400';
-      case 'processing':
-        return 'text-indigo-400';
-      case 'error':
-        return 'text-red-400';
-      default:
-        return 'text-gray-400';
-    }
-  };
-
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle2 className="w-4 h-4 text-emerald-400" />;
+        return <CheckCircle2 className="w-4 h-4 text-emerald-600" />;
       case 'processing':
         return (
-          <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />
+          <Loader2 className="w-4 h-4 text-sand-600 animate-spin" />
         );
       case 'error':
-        return <AlertCircle className="w-4 h-4 text-red-400" />;
+        return <AlertCircle className="w-4 h-4 text-red-500" />;
       default:
-        return <FileText className="w-4 h-4 text-gray-400" />;
+        return <FileText className="w-4 h-4 text-sand-400" />;
     }
   };
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       {/* Top Bar */}
-      <header className="flex items-center justify-between px-6 py-3 bg-gray-900/80 border-b border-gray-800 backdrop-blur-sm flex-shrink-0">
+      <header className="flex items-center justify-between px-6 py-3 bg-white border-b border-sand-200 flex-shrink-0">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             {getStatusIcon(project.status)}
-            <h1 className="text-lg font-semibold text-white truncate max-w-md">
+            <h1 className="text-lg font-semibold text-sand-900 truncate max-w-md">
               {project.title}
             </h1>
           </div>
           <span
             className={`text-xs px-2.5 py-1 rounded-full border ${
               project.status === 'completed'
-                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
                 : project.status === 'error'
-                ? 'bg-red-500/10 border-red-500/20 text-red-400'
+                ? 'bg-red-50 border-red-300 text-red-600'
                 : project.status === 'processing'
-                ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'
-                : 'bg-gray-500/10 border-gray-500/20 text-gray-400'
+                ? 'bg-sand-100 border-sand-300 text-sand-700'
+                : 'bg-sand-100 border-sand-200 text-sand-500'
             }`}
           >
             {project.status.charAt(0).toUpperCase() +
               project.status.slice(1)}
           </span>
           {project.score !== undefined && (
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-sand-500">
               Score:{' '}
-              <span className="text-indigo-400 font-semibold">
+              <span className="text-sand-800 font-semibold">
                 {project.score}/100
               </span>
             </span>
@@ -275,22 +290,34 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Connection indicator */}
-          <div className="flex items-center gap-1.5 text-xs text-gray-500">
+          {/* Connection indicator with helpful message */}
+          <div className="flex items-center gap-1.5 text-xs">
             <div
               className={`w-1.5 h-1.5 rounded-full ${
                 connectionStatus === 'connected'
                   ? 'bg-emerald-500'
                   : connectionStatus === 'connecting'
-                  ? 'bg-yellow-500 animate-pulse'
-                  : 'bg-red-500'
+                  ? 'bg-amber-500 animate-pulse'
+                  : 'bg-sand-400'
               }`}
             />
-            <span className="capitalize">{connectionStatus}</span>
+            <span className={`${
+              connectionStatus === 'connected'
+                ? 'text-emerald-600'
+                : connectionStatus === 'connecting'
+                ? 'text-amber-600'
+                : 'text-sand-500'
+            }`}>
+              {connectionStatus === 'connected'
+                ? 'Live updates active'
+                : connectionStatus === 'connecting'
+                ? 'Connecting to pipeline...'
+                : 'Checking for updates...'}
+            </span>
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex items-center bg-gray-800/50 rounded-lg p-0.5">
+          <div className="flex items-center bg-sand-100 rounded-lg p-0.5 border border-sand-200">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
@@ -299,8 +326,8 @@ export default function DashboardPage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                     activeTab === tab.id
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                      ? 'bg-sand-800 text-sand-50 shadow-sm'
+                      : 'text-sand-600 hover:text-sand-900 hover:bg-sand-200'
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -316,8 +343,8 @@ export default function DashboardPage() {
             onClick={() => setChatOpen(!chatOpen)}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
               chatOpen
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white'
+                ? 'bg-sand-800 text-sand-50'
+                : 'bg-sand-100 text-sand-700 hover:bg-sand-200 hover:text-sand-900 border border-sand-200'
             }`}
           >
             <MessageSquare className="w-4 h-4" />
@@ -329,12 +356,12 @@ export default function DashboardPage() {
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Agent Progress Sidebar */}
-        <div className="w-72 bg-gray-900/50 border-r border-gray-800 overflow-y-auto scrollbar-thin flex-shrink-0">
+        <div className="w-72 bg-white border-r border-sand-200 overflow-y-auto scrollbar-thin flex-shrink-0">
           <AgentProgressViewer stages={project.stages} />
         </div>
 
         {/* Center Content Area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden bg-sand-50">
           {/* Main Tab Content */}
           <div className="flex-1 overflow-hidden">
             {activeTab === 'code' && (
@@ -352,14 +379,14 @@ export default function DashboardPage() {
           </div>
 
           {/* Logs Panel */}
-          <div className="h-56 border-t border-gray-800 flex-shrink-0">
+          <div className="h-56 border-t border-sand-200 flex-shrink-0">
             <LogsPanel logs={logs} />
           </div>
         </div>
 
         {/* Chat Panel */}
         {chatOpen && (
-          <div className="w-96 border-l border-gray-800 animate-slide-in-right flex-shrink-0">
+          <div className="w-96 border-l border-sand-200 flex-shrink-0">
             <ChatInterface
               projectId={projectId}
               onClose={() => setChatOpen(false)}
@@ -376,11 +403,11 @@ export default function DashboardPage() {
 function ValidationPanel({ results }: { results: any }) {
   if (!results) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-500">
+      <div className="flex items-center justify-center h-full text-sand-400 bg-white">
         <div className="text-center">
           <CheckCircle2 className="w-12 h-12 mx-auto mb-3 opacity-30" />
           <p className="text-sm">Validation results will appear here</p>
-          <p className="text-xs mt-1 text-gray-600">
+          <p className="text-xs mt-1 text-sand-400">
             Results are generated after code generation completes
           </p>
         </div>
@@ -391,13 +418,13 @@ function ValidationPanel({ results }: { results: any }) {
   const checks = results.checks || [];
 
   return (
-    <div className="h-full overflow-y-auto scrollbar-thin p-6">
-      <h2 className="text-lg font-semibold mb-4 text-white">
+    <div className="h-full overflow-y-auto scrollbar-thin p-6 bg-white">
+      <h2 className="text-lg font-semibold mb-4 text-sand-900">
         Validation Results
       </h2>
       {results.summary && (
-        <div className="mb-6 p-4 rounded-xl bg-gray-900/50 border border-gray-800">
-          <p className="text-sm text-gray-300">{results.summary}</p>
+        <div className="mb-6 p-4 rounded-xl bg-sand-50 border border-sand-200">
+          <p className="text-sm text-sand-700">{results.summary}</p>
         </div>
       )}
       <div className="space-y-3">
@@ -406,31 +433,31 @@ function ValidationPanel({ results }: { results: any }) {
             key={idx}
             className={`p-4 rounded-xl border ${
               check.passed
-                ? 'bg-emerald-500/5 border-emerald-500/20'
-                : 'bg-red-500/5 border-red-500/20'
+                ? 'bg-emerald-50 border-emerald-200'
+                : 'bg-red-50 border-red-200'
             }`}
           >
             <div className="flex items-center gap-2 mb-1">
               {check.passed ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               ) : (
-                <X className="w-4 h-4 text-red-400" />
+                <X className="w-4 h-4 text-red-500" />
               )}
               <span
                 className={`text-sm font-medium ${
-                  check.passed ? 'text-emerald-300' : 'text-red-300'
+                  check.passed ? 'text-emerald-700' : 'text-red-600'
                 }`}
               >
                 {check.name}
               </span>
             </div>
             {check.message && (
-              <p className="text-xs text-gray-400 ml-6">{check.message}</p>
+              <p className="text-xs text-sand-500 ml-6">{check.message}</p>
             )}
           </div>
         ))}
         {checks.length === 0 && (
-          <p className="text-sm text-gray-500">No validation checks available.</p>
+          <p className="text-sm text-sand-400">No validation checks available.</p>
         )}
       </div>
     </div>
@@ -440,11 +467,11 @@ function ValidationPanel({ results }: { results: any }) {
 function ScorePanel({ data }: { data: any }) {
   if (!data) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-500">
+      <div className="flex items-center justify-center h-full text-sand-400 bg-white">
         <div className="text-center">
           <BarChart3 className="w-12 h-12 mx-auto mb-3 opacity-30" />
           <p className="text-sm">Quality score will appear here</p>
-          <p className="text-xs mt-1 text-gray-600">
+          <p className="text-xs mt-1 text-sand-400">
             Scoring is performed after validation completes
           </p>
         </div>
@@ -456,8 +483,8 @@ function ScorePanel({ data }: { data: any }) {
   const categories = data.categories || [];
 
   return (
-    <div className="h-full overflow-y-auto scrollbar-thin p-6">
-      <h2 className="text-lg font-semibold mb-6 text-white">Quality Score</h2>
+    <div className="h-full overflow-y-auto scrollbar-thin p-6 bg-white">
+      <h2 className="text-lg font-semibold mb-6 text-sand-900">Quality Score</h2>
 
       {/* Overall Score */}
       <div className="flex items-center justify-center mb-8">
@@ -468,7 +495,7 @@ function ScorePanel({ data }: { data: any }) {
               cy="60"
               r="54"
               fill="none"
-              stroke="#1f2937"
+              stroke="#ebe3d7"
               strokeWidth="8"
             />
             <circle
@@ -478,10 +505,10 @@ function ScorePanel({ data }: { data: any }) {
               fill="none"
               stroke={
                 overall >= 80
-                  ? '#22c55e'
+                  ? '#16a34a'
                   : overall >= 60
-                  ? '#eab308'
-                  : '#ef4444'
+                  ? '#ca8a04'
+                  : '#dc2626'
               }
               strokeWidth="8"
               strokeLinecap="round"
@@ -489,8 +516,8 @@ function ScorePanel({ data }: { data: any }) {
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-4xl font-bold text-white">{overall}</span>
-            <span className="text-xs text-gray-400">out of 100</span>
+            <span className="text-4xl font-bold text-sand-900">{overall}</span>
+            <span className="text-xs text-sand-400">out of 100</span>
           </div>
         </div>
       </div>
@@ -500,37 +527,37 @@ function ScorePanel({ data }: { data: any }) {
         {categories.map((cat: any, idx: number) => (
           <div key={idx}>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-sm text-gray-300">{cat.name}</span>
-              <span className="text-sm font-semibold text-white">
+              <span className="text-sm text-sand-700">{cat.name}</span>
+              <span className="text-sm font-semibold text-sand-900">
                 {cat.score}/{cat.max || 100}
               </span>
             </div>
-            <div className="w-full bg-gray-800 rounded-full h-2">
+            <div className="w-full bg-sand-200 rounded-full h-2">
               <div
                 className="h-2 rounded-full transition-all duration-500"
                 style={{
                   width: `${(cat.score / (cat.max || 100)) * 100}%`,
                   backgroundColor:
                     cat.score / (cat.max || 100) >= 0.8
-                      ? '#22c55e'
+                      ? '#16a34a'
                       : cat.score / (cat.max || 100) >= 0.6
-                      ? '#eab308'
-                      : '#ef4444',
+                      ? '#ca8a04'
+                      : '#dc2626',
                 }}
               />
             </div>
           </div>
         ))}
         {categories.length === 0 && (
-          <p className="text-sm text-gray-500">No score breakdown available.</p>
+          <p className="text-sm text-sand-400">No score breakdown available.</p>
         )}
       </div>
 
       {/* Feedback */}
       {data.feedback && (
-        <div className="mt-6 p-4 rounded-xl bg-gray-900/50 border border-gray-800">
-          <h3 className="text-sm font-medium text-gray-300 mb-2">Feedback</h3>
-          <p className="text-xs text-gray-400 whitespace-pre-wrap">
+        <div className="mt-6 p-4 rounded-xl bg-sand-50 border border-sand-200">
+          <h3 className="text-sm font-medium text-sand-700 mb-2">Feedback</h3>
+          <p className="text-xs text-sand-500 whitespace-pre-wrap">
             {data.feedback}
           </p>
         </div>

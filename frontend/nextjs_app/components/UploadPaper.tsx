@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef, useCallback, DragEvent, ChangeEvent } from 'react';
-import { Upload, FileText, X, Loader2, CheckCircle2 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { CheckCircle2, FileText, Upload, X } from 'lucide-react';
+import { ChangeEvent, DragEvent, useCallback, useRef, useState } from 'react';
 
 interface UploadPaperProps {
   onUploadComplete: (projectId: string) => void;
@@ -87,7 +87,6 @@ export default function UploadPaper({
     setUploadProgress(0);
 
     try {
-      // Simulate progress updates while uploading
       const progressInterval = setInterval(() => {
         setUploadProgress((prev) => {
           if (prev >= 90) {
@@ -103,7 +102,6 @@ export default function UploadPaper({
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      // Brief delay to show completion
       setTimeout(() => {
         onUploadComplete(result.project_id);
       }, 500);
@@ -131,10 +129,10 @@ export default function UploadPaper({
         onClick={() => !selectedFile && fileInputRef.current?.click()}
         className={`relative rounded-2xl border-2 border-dashed transition-all duration-300 cursor-pointer ${
           isDragging
-            ? 'border-indigo-500 bg-indigo-500/10 drop-zone-active'
+            ? 'border-sand-600 bg-sand-100 drop-zone-active'
             : selectedFile
-            ? 'border-gray-700 bg-gray-900/50'
-            : 'border-gray-700 bg-gray-900/30 hover:border-gray-600 hover:bg-gray-900/50'
+            ? 'border-sand-300 bg-white'
+            : 'border-sand-300 bg-white hover:border-sand-400 hover:bg-sand-50'
         }`}
       >
         <input
@@ -151,29 +149,29 @@ export default function UploadPaper({
               <div
                 className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-all ${
                   isDragging
-                    ? 'bg-indigo-500/20 scale-110'
-                    : 'bg-gray-800'
+                    ? 'bg-sand-200 scale-110'
+                    : 'bg-sand-100'
                 }`}
               >
                 <Upload
                   className={`w-7 h-7 transition-colors ${
-                    isDragging ? 'text-indigo-400' : 'text-gray-500'
+                    isDragging ? 'text-sand-700' : 'text-sand-400'
                   }`}
                 />
               </div>
-              <p className="text-base font-medium text-gray-300 mb-1">
+              <p className="text-base font-medium text-sand-800 mb-1">
                 {isDragging
                   ? 'Drop your paper here'
                   : 'Drag & drop your research paper'}
               </p>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-sand-400 mb-4">
                 or click to browse files
               </p>
               <div className="flex items-center gap-4">
-                <span className="text-xs text-gray-600 px-3 py-1 rounded-full bg-gray-800/50">
+                <span className="text-xs text-sand-500 px-3 py-1 rounded-full bg-sand-100">
                   PDF only
                 </span>
-                <span className="text-xs text-gray-600 px-3 py-1 rounded-full bg-gray-800/50">
+                <span className="text-xs text-sand-500 px-3 py-1 rounded-full bg-sand-100">
                   Max 100MB
                 </span>
               </div>
@@ -182,15 +180,15 @@ export default function UploadPaper({
             <>
               {/* Selected file display */}
               <div className="w-full max-w-md">
-                <div className="flex items-center gap-4 p-4 rounded-xl bg-gray-800/50 border border-gray-700">
-                  <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center flex-shrink-0">
-                    <FileText className="w-6 h-6 text-indigo-400" />
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-sand-50 border border-sand-200">
+                  <div className="w-12 h-12 rounded-xl bg-sand-200 border border-sand-300 flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-6 h-6 text-sand-700" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">
+                    <p className="text-sm font-medium text-sand-900 truncate">
                       {selectedFile.name}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-sand-400">
                       {formatFileSize(selectedFile.size)}
                     </p>
                   </div>
@@ -200,7 +198,7 @@ export default function UploadPaper({
                         e.stopPropagation();
                         handleRemoveFile();
                       }}
-                      className="p-1.5 rounded-lg hover:bg-gray-700 text-gray-500 hover:text-white transition-colors"
+                      className="p-1.5 rounded-lg hover:bg-sand-200 text-sand-400 hover:text-sand-700 transition-colors"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -211,18 +209,18 @@ export default function UploadPaper({
                 {isUploading && (
                   <div className="mt-4">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-sand-500">
                         {uploadProgress >= 100
                           ? 'Upload complete!'
                           : 'Uploading...'}
                       </span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-sand-400">
                         {Math.round(uploadProgress)}%
                       </span>
                     </div>
-                    <div className="w-full bg-gray-800 rounded-full h-1.5">
+                    <div className="w-full bg-sand-200 rounded-full h-1.5">
                       <div
-                        className="h-1.5 rounded-full bg-indigo-500 transition-all duration-300"
+                        className="h-1.5 rounded-full bg-sand-700 transition-all duration-300"
                         style={{ width: `${uploadProgress}%` }}
                       />
                     </div>
@@ -236,7 +234,7 @@ export default function UploadPaper({
                       e.stopPropagation();
                       handleUpload();
                     }}
-                    className="mt-4 w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30"
+                    className="mt-4 w-full py-3 px-4 rounded-xl bg-sand-800 hover:bg-sand-700 text-sand-50 font-medium text-sm transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
                   >
                     <Upload className="w-4 h-4" />
                     Upload & Process Paper
@@ -244,7 +242,7 @@ export default function UploadPaper({
                 )}
 
                 {isUploading && uploadProgress >= 100 && (
-                  <div className="mt-3 flex items-center justify-center gap-2 text-emerald-400 text-sm">
+                  <div className="mt-3 flex items-center justify-center gap-2 text-emerald-600 text-sm">
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Redirecting to dashboard...</span>
                   </div>
@@ -257,7 +255,7 @@ export default function UploadPaper({
 
       {/* Error message */}
       {error && (
-        <div className="mt-3 flex items-center gap-2 text-red-400 text-sm px-1">
+        <div className="mt-3 flex items-center gap-2 text-red-600 text-sm px-1">
           <X className="w-4 h-4 flex-shrink-0" />
           <span>{error}</span>
         </div>

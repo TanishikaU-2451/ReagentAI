@@ -65,6 +65,7 @@ app.add_middleware(
 _pipeline: Optional[ReagentPipeline] = None
 
 # In-memory project registry  { project_id: PipelineResult | dict }
+  
 _projects: Dict[str, Any] = {}
 
 # Active WebSocket connections per project  { project_id: [WebSocket, ...] }
@@ -101,18 +102,24 @@ async def _progress_callback(
 ) -> None:
     """Pipeline progress callback — broadcasts stage updates via WebSocket."""
     await _broadcast(project_id, {
-        "event": "stage_update",
-        "stage": stage,
-        "status": status,
-        "detail": detail,
+        "type": "stage_update",
+        "data": {
+            "stageName": stage,
+            "status": status,
+            "activityText": detail,
+            "agentName": stage.replace("_", " ").title(),
+        },
     })
 
     # Also broadcast a log entry
     level = "ERROR" if status == StageStatus.FAILED else "INFO"
     await _broadcast(project_id, {
-        "event": "log",
-        "level": level,
-        "message": f"[{stage}] {status}: {detail}" if detail else f"[{stage}] {status}",
+        "type": "log",
+        "data": {
+            "level": level,
+            "message": f"[{stage}] {status}: {detail}" if detail else f"[{stage}] {status}",
+            "agent": stage.replace("_", " ").title(),
+        },
     })
 
 
@@ -189,6 +196,17 @@ async def upload_paper(file: UploadFile = File(...)):
     # Launch the pipeline in the background
     asyncio.create_task(_run_pipeline(project_id, str(upload_path)))
 
+    # Send immediate notification to any connected WebSocket clients
+    asyncio.create_task(_broadcast(project_id, {
+        "type": "log",
+        "data": {
+            "timestamp": "",
+            "level": "INFO",
+            "message": f"✓ Paper '{file.filename}' received. Initializing multi-agent pipeline...",
+            "agent": "System",
+        },
+    }))
+
     return JSONResponse(
         status_code=202,
         content={"project_id": project_id, "message": "Pipeline started."},
@@ -198,6 +216,17 @@ async def upload_paper(file: UploadFile = File(...)):
 async def _run_pipeline(project_id: str, paper_path: str) -> None:
     """Execute the full pipeline for a project (runs as a background task)."""
     try:
+        # Send initial status
+        await _broadcast(project_id, {
+            "type": "log",
+            "data": {
+                "timestamp": "",
+                "level": "INFO",
+                "message": "Pipeline execution started. Loading agents and models...",
+                "agent": "Orchestrator",
+            },
+        })
+
         pipeline = _get_pipeline()
 
         async def _cb(stage: str, status: str, detail: str = "") -> None:
@@ -213,9 +242,12 @@ async def _run_pipeline(project_id: str, paper_path: str) -> None:
 
         # Notify completion
         await _broadcast(project_id, {
-            "event": "pipeline_complete" if result.status != "failed" else "pipeline_error",
-            "status": result.status,
-            "error": result.error,
+            "type": "pipeline_complete" if result.status != "failed" else "pipeline_error",
+            "data": {
+                "status": result.status,
+                "error": result.error,
+                "score": result.reproducibility.overall_score if result.reproducibility else None,
+            },
         })
 
     except Exception as exc:
@@ -226,10 +258,23 @@ async def _run_pipeline(project_id: str, paper_path: str) -> None:
             "error": str(exc),
         }
         await _broadcast(project_id, {
-            "event": "pipeline_error",
-            "status": "failed",
-            "error": str(exc),
+            "type": "pipeline_error",
+            "data": {
+                "status": "failed",
+                "error": str(exc),
+            },
         })
+
+
+@app.get("/api/projects/latest")
+async def get_latest_project():
+    """Get the latest project ID."""
+    if not _projects:
+        raise HTTPException(status_code=404, detail="No projects found.")
+
+    # Get the most recently created project
+    latest_project_id = max(_projects.keys())
+    return {"project_id": latest_project_id}
 
 
 @app.get("/api/projects/{project_id}")
@@ -464,19 +509,34 @@ async def websocket_pipeline(websocket: WebSocket, project_id: str):
 
     logger.info("WebSocket connected: project_id={}", project_id)
 
-    # Send current project state immediately
+    # Send current project state immediately OR a welcome message
     project = _projects.get(project_id)
     if project is not None:
         if isinstance(project, PipelineResult):
             await websocket.send_json({
-                "event": "project_info",
-                "data": project.summary(),
+                "type": "project_info",
+                "data": {
+                    "title": project.parsed_paper.document.metadata.title if project.parsed_paper else project_id,
+                    "status": project.status,
+                    "paperFilename": "",
+                },
             })
         else:
             await websocket.send_json({
-                "event": "project_info",
+                "type": "project_info",
                 "data": project,
             })
+    else:
+        # Project not yet registered - send initial message
+        await websocket.send_json({
+            "type": "log",
+            "data": {
+                "timestamp": "",
+                "level": "INFO",
+                "message": "Connected to pipeline. Initializing agents...",
+                "agent": "System",
+            },
+        })
 
     try:
         # Keep the connection alive, reading messages (client may send pings)
@@ -493,8 +553,13 @@ async def websocket_pipeline(websocket: WebSocket, project_id: str):
 
 
 # ---------------------------------------------------------------------------
-# Health check
+# Health check and root endpoint
 # ---------------------------------------------------------------------------
+
+@app.get("/")
+async def root():
+    """Root endpoint for API status."""
+    return {"message": "ReagentAI Backend API", "status": "running", "version": "1.0.0"}
 
 @app.get("/health")
 async def health():

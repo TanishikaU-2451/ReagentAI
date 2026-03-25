@@ -79,54 +79,27 @@ class ResearchAgent(BaseAgent):
 
         # ----- Build the prompt -----
         system_instruction = (
-            "You are an expert machine-learning research analyst. "
-            "Your task is to read the provided research paper excerpt and "
-            "extract structured information. Respond ONLY with a valid JSON "
-            "object -- no markdown fences, no commentary."
+            "Extract key information from this machine learning research paper. "
+            "Return ONLY valid JSON with no extra text."
         )
 
-        user_message = f"""Paper title: {paper_title}
+        user_message = f"""Paper: {paper_title}
 
---- BEGIN PAPER TEXT ---
 {truncated_text}
---- END PAPER TEXT ---
 
-Extract the following information and return a JSON object with exactly these keys:
+Extract this information as JSON:
+- algorithm: (name and brief description)
+- architecture_components: (list of neural network components)
+- datasets: (list with name and description)
+- hyperparameters: (learning_rate, batch_size, epochs, optimizer)
+- training_strategy: (brief training procedure description)
+- equations: (list with name, latex, description)
+- summary: (2-3 sentence paper summary)
 
-{{
-  "algorithm": "<Name and one-paragraph description of the core algorithm or method>",
-  "architecture_components": [
-    "<component 1: e.g. 'Multi-Head Self-Attention layer'>",
-    "<component 2: e.g. 'Feed-Forward Network with GELU activation'>",
-    ...
-  ],
-  "datasets": [
-    {{
-      "name": "<dataset name>",
-      "description": "<brief description, size, modality>"
-    }}
-  ],
-  "hyperparameters": {{
-    "learning_rate": "<value or range>",
-    "batch_size": "<value>",
-    "epochs": "<value>",
-    "optimizer": "<name>",
-    "other": {{}}
-  }},
-  "training_strategy": "<Paragraph describing training procedure: optimizer, LR schedule, augmentation, regularisation, etc.>",
-  "equations": [
-    {{
-      "name": "<equation label>",
-      "latex": "<LaTeX representation>",
-      "description": "<plain-English explanation>"
-    }}
-  ],
-  "summary": "<A concise 3-5 sentence summary of the paper's contribution>"
-}}
+JSON format:
+{{"algorithm": "...", "architecture_components": [...], "datasets": [...], "hyperparameters": {{"learning_rate": "...", "batch_size": "...", "epochs": "...", "optimizer": "..."}}, "training_strategy": "...", "equations": [...], "summary": "..."}}
 
-Important:
-- If a field is not mentioned in the paper, use "Not specified" or an empty list.
-- Return ONLY the JSON object, nothing else."""
+Return ONLY the JSON object."""
 
         prompt = self._build_prompt(system_instruction, user_message)
 

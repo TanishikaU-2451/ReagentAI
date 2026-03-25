@@ -1,17 +1,17 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback, FormEvent } from 'react';
-import {
-  X,
-  Send,
-  Bot,
-  User,
-  Loader2,
-  BookOpen,
-  MessageSquare,
-  Sparkles,
-} from 'lucide-react';
 import { api } from '@/lib/api';
+import {
+    BookOpen,
+    Bot,
+    Loader2,
+    MessageSquare,
+    Send,
+    Sparkles,
+    User,
+    X,
+} from 'lucide-react';
+import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 interface ChatMessage {
   id: string;
@@ -57,7 +57,6 @@ export default function ChatInterface({
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  // Focus input on mount
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
@@ -118,23 +117,23 @@ export default function ChatInterface({
   };
 
   return (
-    <div className="h-full flex flex-col bg-gray-950">
+    <div className="h-full flex flex-col bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-sand-200 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+          <div className="w-7 h-7 rounded-lg bg-sand-100 border border-sand-300 flex items-center justify-center">
+            <Sparkles className="w-3.5 h-3.5 text-sand-700" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-white">Paper Q&A</h3>
-            <p className="text-[10px] text-gray-500">
+            <h3 className="text-sm font-semibold text-sand-900">Paper Q&A</h3>
+            <p className="text-[10px] text-sand-400">
               Ask questions about the paper
             </p>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-gray-800 transition-colors"
+          className="p-1.5 rounded-lg text-sand-400 hover:text-sand-800 hover:bg-sand-100 transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
@@ -144,11 +143,11 @@ export default function ChatInterface({
       <div className="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-4">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center py-8">
-            <MessageSquare className="w-10 h-10 text-gray-800 mb-3" />
-            <p className="text-sm text-gray-400 mb-1">
+            <MessageSquare className="w-10 h-10 text-sand-300 mb-3" />
+            <p className="text-sm text-sand-600 mb-1">
               Ask anything about the paper
             </p>
-            <p className="text-xs text-gray-600 mb-6 max-w-[250px]">
+            <p className="text-xs text-sand-400 mb-6 max-w-[250px]">
               I can answer questions about the model architecture, training
               process, datasets, and more.
             </p>
@@ -159,7 +158,7 @@ export default function ChatInterface({
                 <button
                   key={idx}
                   onClick={() => sendMessage(q)}
-                  className="w-full text-left px-3 py-2 rounded-lg border border-gray-800 text-xs text-gray-400 hover:text-white hover:border-gray-700 hover:bg-gray-900/50 transition-all"
+                  className="w-full text-left px-3 py-2 rounded-lg border border-sand-200 text-xs text-sand-600 hover:text-sand-900 hover:border-sand-400 hover:bg-sand-50 transition-all"
                 >
                   {q}
                 </button>
@@ -171,7 +170,7 @@ export default function ChatInterface({
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex gap-3 animate-fade-in ${
+            className={`flex gap-3 ${
               msg.role === 'user' ? 'flex-row-reverse' : ''
             }`}
           >
@@ -179,14 +178,14 @@ export default function ChatInterface({
             <div
               className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
                 msg.role === 'user'
-                  ? 'bg-indigo-600'
-                  : 'bg-gray-800 border border-gray-700'
+                  ? 'bg-sand-800'
+                  : 'bg-sand-100 border border-sand-300'
               }`}
             >
               {msg.role === 'user' ? (
-                <User className="w-3.5 h-3.5 text-white" />
+                <User className="w-3.5 h-3.5 text-sand-100" />
               ) : (
-                <Bot className="w-3.5 h-3.5 text-indigo-400" />
+                <Bot className="w-3.5 h-3.5 text-sand-700" />
               )}
             </div>
 
@@ -199,8 +198,8 @@ export default function ChatInterface({
               <div
                 className={`inline-block text-left px-3 py-2 rounded-xl text-sm leading-relaxed ${
                   msg.role === 'user'
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-900 border border-gray-800 text-gray-300'
+                    ? 'bg-sand-800 text-sand-100'
+                    : 'bg-sand-50 border border-sand-200 text-sand-800'
                 }`}
               >
                 <p className="whitespace-pre-wrap">{msg.content}</p>
@@ -209,26 +208,26 @@ export default function ChatInterface({
               {/* Citations */}
               {msg.citations && msg.citations.length > 0 && (
                 <div className="mt-2 space-y-1.5">
-                  <p className="text-[10px] text-gray-600 flex items-center gap-1">
+                  <p className="text-[10px] text-sand-400 flex items-center gap-1">
                     <BookOpen className="w-3 h-3" />
                     Sources
                   </p>
                   {msg.citations.map((citation, idx) => (
                     <div
                       key={idx}
-                      className="px-2.5 py-1.5 rounded-lg bg-gray-900/50 border border-gray-800/50 text-[11px]"
+                      className="px-2.5 py-1.5 rounded-lg bg-sand-50 border border-sand-200 text-[11px]"
                     >
                       <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className="text-indigo-400 font-medium">
+                        <span className="text-sand-700 font-medium">
                           {citation.section}
                         </span>
                         {citation.page && (
-                          <span className="text-gray-600">
+                          <span className="text-sand-400">
                             p.{citation.page}
                           </span>
                         )}
                       </div>
-                      <p className="text-gray-500 line-clamp-2">
+                      <p className="text-sand-500 line-clamp-2">
                         {citation.text}
                       </p>
                     </div>
@@ -236,7 +235,7 @@ export default function ChatInterface({
                 </div>
               )}
 
-              <p className="text-[10px] text-gray-700 mt-1">
+              <p className="text-[10px] text-sand-400 mt-1">
                 {msg.timestamp.toLocaleTimeString([], {
                   hour: '2-digit',
                   minute: '2-digit',
@@ -248,14 +247,14 @@ export default function ChatInterface({
 
         {/* Loading indicator */}
         {isLoading && (
-          <div className="flex gap-3 animate-fade-in">
-            <div className="w-7 h-7 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center flex-shrink-0">
-              <Bot className="w-3.5 h-3.5 text-indigo-400" />
+          <div className="flex gap-3">
+            <div className="w-7 h-7 rounded-lg bg-sand-100 border border-sand-300 flex items-center justify-center flex-shrink-0">
+              <Bot className="w-3.5 h-3.5 text-sand-700" />
             </div>
-            <div className="px-3 py-2 rounded-xl bg-gray-900 border border-gray-800">
+            <div className="px-3 py-2 rounded-xl bg-sand-50 border border-sand-200">
               <div className="flex items-center gap-2">
-                <Loader2 className="w-3.5 h-3.5 text-indigo-400 animate-spin" />
-                <span className="text-xs text-gray-500">Thinking...</span>
+                <Loader2 className="w-3.5 h-3.5 text-sand-500 animate-spin" />
+                <span className="text-xs text-sand-400">Thinking...</span>
               </div>
             </div>
           </div>
@@ -265,7 +264,7 @@ export default function ChatInterface({
       </div>
 
       {/* Input */}
-      <div className="border-t border-gray-800 p-3 flex-shrink-0">
+      <div className="border-t border-sand-200 p-3 flex-shrink-0">
         <form onSubmit={handleSubmit} className="flex items-end gap-2">
           <div className="flex-1 relative">
             <textarea
@@ -276,14 +275,14 @@ export default function ChatInterface({
               placeholder="Ask about the paper..."
               rows={1}
               disabled={isLoading}
-              className="w-full px-3 py-2.5 rounded-xl bg-gray-900 border border-gray-800 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 resize-none disabled:opacity-50 transition-all"
+              className="w-full px-3 py-2.5 rounded-xl bg-sand-50 border border-sand-200 text-sm text-sand-900 placeholder-sand-400 focus:outline-none focus:border-sand-500 focus:ring-1 focus:ring-sand-300 resize-none disabled:opacity-50 transition-all"
               style={{ minHeight: '42px', maxHeight: '120px' }}
             />
           </div>
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="p-2.5 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-30 disabled:hover:bg-indigo-600 transition-all flex-shrink-0"
+            className="p-2.5 rounded-xl bg-sand-800 text-sand-100 hover:bg-sand-700 disabled:opacity-30 disabled:hover:bg-sand-800 transition-all flex-shrink-0"
           >
             <Send className="w-4 h-4" />
           </button>

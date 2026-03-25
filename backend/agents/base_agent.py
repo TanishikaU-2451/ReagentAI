@@ -1,4 +1,7 @@
+
 """ReagentAI Base Agent.
+
+
 
 Provides the abstract base class for all agents in the multi-agent system.
 Every agent inherits from BaseAgent and implements the ``run`` method, which
@@ -20,8 +23,8 @@ import httpx
 from backend.config.settings import settings
 from backend.utils.logging import get_logger
 
-# HuggingFace Inference API base URL
-HF_INFERENCE_URL = "https://router.huggingface.co/models/{model_id}"
+# HuggingFace Inference API base URL (New OpenAI-compatible endpoint)
+HF_INFERENCE_URL = "https://router.huggingface.co/v1/chat/completions"
 
 # Retry / rate-limit defaults
 _MAX_RETRIES = 3
@@ -88,8 +91,7 @@ class BaseAgent(abc.ABC):
     ) -> str:
         """Call the HuggingFace Inference API and return generated text.
 
-        The method performs exponential back-off when the API returns a
-        503 (model loading) or 429 (rate-limited) response.
+        Uses the new OpenAI-compatible API endpoint with automatic provider selection.
 
         Args:
             prompt:          The full prompt string to send.
@@ -104,25 +106,25 @@ class BaseAgent(abc.ABC):
         Raises:
             httpx.HTTPStatusError: If the request fails after all retries.
         """
-        url = HF_INFERENCE_URL.format(model_id=self.model_id)
         headers = {
             "Authorization": f"Bearer {settings.huggingface_api_token}",
             "Content-Type": "application/json",
         }
 
-        parameters: Dict[str, Any] = {
-            "max_new_tokens": max_new_tokens,
+        # Use OpenAI-compatible format with automatic provider selection
+        payload = {
+            "model": f"{self.model_id}:fastest",  # Use :fastest for best performance
+            "messages": [
+                {"role": "user", "content": prompt}
+            ],
+            "max_tokens": max_new_tokens,
             "temperature": temperature,
             "top_p": top_p,
-            "return_full_text": False,
+            "stream": False,
         }
-        if stop_sequences:
-            parameters["stop"] = stop_sequences
 
-        payload = {
-            "inputs": prompt,
-            "parameters": parameters,
-        }
+        if stop_sequences:
+            payload["stop"] = stop_sequences
 
         self.log_reasoning("call_model", f"Sending request to {self.model_id}")
 
@@ -131,19 +133,17 @@ class BaseAgent(abc.ABC):
         async with httpx.AsyncClient(timeout=_REQUEST_TIMEOUT_SECONDS) as client:
             for attempt in range(1, _MAX_RETRIES + 1):
                 try:
-                    response = await client.post(url, headers=headers, json=payload)
+                    response = await client.post(HF_INFERENCE_URL, headers=headers, json=payload)
 
                     # Model still loading -- wait and retry
                     if response.status_code == 503:
-                        estimated = response.json().get("estimated_time", backoff)
-                        wait_time = max(float(estimated), backoff)
                         self.logger.warning(
                             "Model loading (503). Retry {attempt}/{max} in {wait}s",
                             attempt=attempt,
                             max=_MAX_RETRIES,
-                            wait=round(wait_time, 1),
+                            wait=round(backoff, 1),
                         )
-                        await asyncio.sleep(wait_time)
+                        await asyncio.sleep(backoff)
                         backoff *= 2
                         continue
 
@@ -163,13 +163,36 @@ class BaseAgent(abc.ABC):
 
                     data = response.json()
 
-                    # HuggingFace returns a list of dicts with "generated_text"
-                    if isinstance(data, list) and len(data) > 0:
-                        generated = data[0].get("generated_text", "")
-                    elif isinstance(data, dict):
-                        generated = data.get("generated_text", "")
-                    else:
+                    # Parse OpenAI-compatible response format
+                    generated = ""
+                    if isinstance(data, dict) and "choices" in data:
+                        if len(data["choices"]) > 0:
+                            choice = data["choices"][0]
+                            if "message" in choice and "content" in choice["message"]:
+                                generated = choice["message"]["content"]
+                            elif "text" in choice:  # Fallback for some providers
+                                generated = choice["text"]
+
+                    # Fallback parsing for different response formats
+                    if not generated and isinstance(data, dict):
+                        generated = data.get("generated_text", data.get("content", ""))
+
+                    if not generated:
                         generated = str(data)
+
+                    # Validate response is not empty
+                    if not generated.strip():
+                        self.logger.warning(
+                            "Model returned empty response on attempt {}/{}",
+                            attempt,
+                            _MAX_RETRIES
+                        )
+                        if attempt < _MAX_RETRIES:
+                            await asyncio.sleep(backoff)
+                            backoff *= 2
+                            continue
+                        else:
+                            return "Error: Model returned empty response after all retries."
 
                     self.log_reasoning(
                         "call_model",
@@ -230,6 +253,8 @@ class BaseAgent(abc.ABC):
         into a single prompt string compatible with most instruction-tuned
         models on the HuggingFace Hub.
 
+        Uses a model-agnostic format that works with Flan-T5, DialoGPT, and similar models.
+
         Args:
             system: System-level instruction.
             user:   User-level request / data.
@@ -237,6 +262,5 @@ class BaseAgent(abc.ABC):
         Returns:
             A formatted prompt string.
         """
-        return (
-            f"<s>[INST] <<SYS>>\n{system}\n<</SYS>>\n\n{user} [/INST]"
-        )
+        # Simple format compatible with Flan-T5 and DialoGPT
+        return f"{system}\n\n{user}"

@@ -4,17 +4,24 @@
 
 @layer base {
   :root {
-    --background: #030712;
-    --foreground: #f9fafb;
-    --muted: #1f2937;
-    --muted-foreground: #9ca3af;
-    --border: #374151;
-    --accent: #6366f1;
-    --accent-foreground: #e0e7ff;
-    --destructive: #ef4444;
-    --success: #22c55e;
-    --warning: #eab308;
-    --info: #3b82f6;
+    --background: #faf8f5;
+    --foreground: #2a231c;
+    --muted: #f5f0ea;
+    --muted-foreground: #7d6a52;
+    --border: #ebe3d7;
+    --accent: #7d6a52;
+    --accent-foreground: #faf8f5;
+    --destructive: #b91c1c;
+    --success: #4d7c0f;
+    --warning: #a16207;
+    --info: #0369a1;
+    --card: #ffffff;
+    --card-foreground: #2a231c;
+    --sidebar: #2a231c;
+    --sidebar-foreground: #ebe3d7;
+    --input: #ffffff;
+    --input-border: #ddd1be;
+    --focus-ring: #7d6a52;
   }
 
   * {
@@ -43,7 +50,7 @@
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: #374151 transparent;
+    scrollbar-color: #cfc4b5 transparent;
   }
 
   .scrollbar-thin::-webkit-scrollbar {
@@ -56,12 +63,12 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: #374151;
+    background-color: #cfc4b5;
     border-radius: 3px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background-color: #4b5563;
+    background-color: #b8a994;
   }
 }
 
@@ -78,37 +85,37 @@
 .mermaid .node rect,
 .mermaid .node circle,
 .mermaid .node polygon {
-  fill: #1e1b4b !important;
-  stroke: #6366f1 !important;
+  fill: #f5f0ea !important;
+  stroke: #7d6a52 !important;
   stroke-width: 2px !important;
 }
 
 .mermaid .edgePath .path {
-  stroke: #818cf8 !important;
+  stroke: #b8a994 !important;
   stroke-width: 2px !important;
 }
 
 .mermaid .edgeLabel {
-  background-color: #111827 !important;
-  color: #d1d5db !important;
+  background-color: #ffffff !important;
+  color: #2a231c !important;
 }
 
 .mermaid text {
-  fill: #e5e7eb !important;
+  fill: #2a231c !important;
   font-size: 14px !important;
 }
 
 .mermaid .label {
-  color: #e5e7eb !important;
+  color: #2a231c !important;
 }
 
 .mermaid .cluster rect {
-  fill: #1f2937 !important;
-  stroke: #4b5563 !important;
+  fill: #faf8f5 !important;
+  stroke: #ebe3d7 !important;
 }
 
 .mermaid .cluster text {
-  fill: #9ca3af !important;
+  fill: #7d6a52 !important;
 }
 
 /* Code block styling */
@@ -123,7 +130,7 @@
   width: 3em;
   padding-right: 1em;
   text-align: right;
-  color: #4b5563;
+  color: #b8a994;
   user-select: none;
 }
 
@@ -142,10 +149,10 @@
   background-position: 0 0, 100% 0, 100% 100%, 0 100%;
   background-repeat: no-repeat;
   background-image:
-    linear-gradient(90deg, #6366f1 50%, transparent 50%),
-    linear-gradient(180deg, #6366f1 50%, transparent 50%),
-    linear-gradient(90deg, #6366f1 50%, transparent 50%),
-    linear-gradient(180deg, #6366f1 50%, transparent 50%);
+    linear-gradient(90deg, #7d6a52 50%, transparent 50%),
+    linear-gradient(180deg, #7d6a52 50%, transparent 50%),
+    linear-gradient(90deg, #7d6a52 50%, transparent 50%),
+    linear-gradient(180deg, #7d6a52 50%, transparent 50%);
   animation: borderDash 1s linear infinite;
 }
 

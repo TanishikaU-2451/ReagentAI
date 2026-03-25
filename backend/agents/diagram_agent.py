@@ -302,7 +302,7 @@ Requirements:
         """Clean LLM output to extract valid Mermaid code.
 
         Strips markdown fences and any explanatory text that may surround
-        the diagram code.
+        the diagram code. Also fixes common Mermaid syntax errors.
         """
         text = raw.strip()
 
@@ -318,4 +318,28 @@ Requirements:
                 text = text[idx:]
                 break
 
-        return text.strip()
+        # Fix common Mermaid syntax errors
+        lines = text.split('\n')
+        fixed_lines = []
+
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+
+            # Fix standalone title directive after graph declaration
+            if stripped.startswith('title ') and i > 0:
+                # Remove standalone title lines that appear after graph declaration
+                # These cause parsing errors in Mermaid
+                continue
+
+            # Fix "graph LR title ..." on same line
+            if 'graph LR title' in stripped or 'graph TD title' in stripped:
+                # Split into proper graph declaration
+                if 'graph LR title' in stripped:
+                    fixed_lines.append('graph LR')
+                elif 'graph TD title' in stripped:
+                    fixed_lines.append('graph TD')
+                continue
+
+            fixed_lines.append(line)
+
+        return '\n'.join(fixed_lines).strip()

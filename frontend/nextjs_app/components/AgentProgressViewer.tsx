@@ -1,20 +1,20 @@
 'use client';
 
 import {
-  FileSearch,
-  Brain,
-  Code2,
-  TestTube2,
-  BarChart3,
-  GitFork,
-  CheckCircle2,
-  XCircle,
-  Loader2,
-  Circle,
-  Cpu,
-  Database,
-  BookOpen,
-  Wrench,
+    BarChart3,
+    BookOpen,
+    Brain,
+    CheckCircle2,
+    Circle,
+    Code2,
+    Cpu,
+    Database,
+    FileSearch,
+    GitFork,
+    Loader2,
+    TestTube2,
+    Wrench,
+    XCircle,
 } from 'lucide-react';
 
 interface PipelineStage {
@@ -73,25 +73,25 @@ export default function AgentProgressViewer({
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-gray-800">
-        <h2 className="text-sm font-semibold text-white mb-3">
+      <div className="p-4 border-b border-sand-200">
+        <h2 className="text-sm font-semibold text-sand-900 mb-3">
           Pipeline Progress
         </h2>
         <div className="flex items-center gap-3 mb-2">
-          <div className="flex-1 bg-gray-800 rounded-full h-1.5">
+          <div className="flex-1 bg-sand-200 rounded-full h-1.5">
             <div
-              className="h-1.5 rounded-full bg-indigo-500 transition-all duration-500"
+              className="h-1.5 rounded-full bg-sand-700 transition-all duration-500"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
-          <span className="text-xs text-gray-400 tabular-nums flex-shrink-0">
+          <span className="text-xs text-sand-500 tabular-nums flex-shrink-0">
             {completedCount}/{totalCount}
           </span>
         </div>
         {runningStage && (
-          <div className="flex items-center gap-2 mt-2 px-2 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
-            <Loader2 className="w-3 h-3 text-indigo-400 animate-spin flex-shrink-0" />
-            <span className="text-xs text-indigo-300 truncate">
+          <div className="flex items-center gap-2 mt-2 px-2 py-1.5 rounded-lg bg-sand-100 border border-sand-300">
+            <Loader2 className="w-3 h-3 text-sand-600 animate-spin flex-shrink-0" />
+            <span className="text-xs text-sand-600 truncate">
               {runningStage.activityText ||
                 `Running ${runningStage.name}...`}
             </span>
@@ -103,7 +103,7 @@ export default function AgentProgressViewer({
       <div className="flex-1 overflow-y-auto scrollbar-thin p-4">
         <div className="relative">
           {/* Vertical line */}
-          <div className="absolute left-[15px] top-2 bottom-2 w-px bg-gray-800" />
+          <div className="absolute left-[15px] top-2 bottom-2 w-px bg-sand-200" />
 
           <div className="space-y-1">
             {displayStages.map((stage, index) => {
@@ -113,23 +113,23 @@ export default function AgentProgressViewer({
                   {/* Status indicator */}
                   <div className="relative z-10 flex-shrink-0 mt-0.5">
                     {stage.status === 'completed' && (
-                      <div className="w-[30px] h-[30px] rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      <div className="w-[30px] h-[30px] rounded-full bg-emerald-50 border border-emerald-300 flex items-center justify-center">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                       </div>
                     )}
                     {stage.status === 'running' && (
-                      <div className="w-[30px] h-[30px] rounded-full bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center">
-                        <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />
+                      <div className="w-[30px] h-[30px] rounded-full bg-sand-100 border border-sand-400 flex items-center justify-center">
+                        <Loader2 className="w-4 h-4 text-sand-700 animate-spin" />
                       </div>
                     )}
                     {stage.status === 'error' && (
-                      <div className="w-[30px] h-[30px] rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center">
-                        <XCircle className="w-4 h-4 text-red-400" />
+                      <div className="w-[30px] h-[30px] rounded-full bg-red-50 border border-red-300 flex items-center justify-center">
+                        <XCircle className="w-4 h-4 text-red-500" />
                       </div>
                     )}
                     {stage.status === 'pending' && (
-                      <div className="w-[30px] h-[30px] rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center">
-                        <Circle className="w-3 h-3 text-gray-600" />
+                      <div className="w-[30px] h-[30px] rounded-full bg-sand-100 border border-sand-300 flex items-center justify-center">
+                        <Circle className="w-3 h-3 text-sand-400" />
                       </div>
                     )}
                   </div>
@@ -138,9 +138,9 @@ export default function AgentProgressViewer({
                   <div
                     className={`flex-1 py-2 px-3 rounded-lg transition-all ${
                       stage.status === 'running'
-                        ? 'bg-indigo-500/5 border border-indigo-500/10'
+                        ? 'bg-sand-50 border border-sand-300'
                         : stage.status === 'error'
-                        ? 'bg-red-500/5 border border-red-500/10'
+                        ? 'bg-red-50 border border-red-200'
                         : ''
                     }`}
                   >
@@ -148,23 +148,23 @@ export default function AgentProgressViewer({
                       <Icon
                         className={`w-3.5 h-3.5 ${
                           stage.status === 'completed'
-                            ? 'text-emerald-400'
+                            ? 'text-emerald-600'
                             : stage.status === 'running'
-                            ? 'text-indigo-400'
+                            ? 'text-sand-700'
                             : stage.status === 'error'
-                            ? 'text-red-400'
-                            : 'text-gray-600'
+                            ? 'text-red-500'
+                            : 'text-sand-400'
                         }`}
                       />
                       <span
                         className={`text-sm font-medium ${
                           stage.status === 'completed'
-                            ? 'text-gray-300'
+                            ? 'text-sand-700'
                             : stage.status === 'running'
-                            ? 'text-white'
+                            ? 'text-sand-900'
                             : stage.status === 'error'
-                            ? 'text-red-300'
-                            : 'text-gray-500'
+                            ? 'text-red-600'
+                            : 'text-sand-400'
                         }`}
                       >
                         {stage.name}
@@ -172,25 +172,25 @@ export default function AgentProgressViewer({
                     </div>
 
                     {stage.agentName && (
-                      <p className="text-[11px] text-gray-500 mt-0.5 ml-5.5">
+                      <p className="text-[11px] text-sand-500 mt-0.5 ml-5.5">
                         Agent: {stage.agentName}
                       </p>
                     )}
 
                     {stage.status === 'running' && stage.activityText && (
-                      <p className="text-[11px] text-indigo-400/70 mt-1 ml-5.5 truncate">
+                      <p className="text-[11px] text-sand-500 mt-1 ml-5.5 truncate">
                         {stage.activityText}
                       </p>
                     )}
 
                     {stage.status === 'error' && stage.error && (
-                      <p className="text-[11px] text-red-400/70 mt-1 ml-5.5 truncate">
+                      <p className="text-[11px] text-red-500 mt-1 ml-5.5 truncate">
                         {stage.error}
                       </p>
                     )}
 
                     {stage.completedAt && (
-                      <p className="text-[10px] text-gray-600 mt-0.5 ml-5.5">
+                      <p className="text-[10px] text-sand-400 mt-0.5 ml-5.5">
                         {new Date(stage.completedAt).toLocaleTimeString()}
                       </p>
                     )}

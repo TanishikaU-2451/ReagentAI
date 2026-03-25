@@ -5,7 +5,7 @@
  * pipeline updates. Includes auto-reconnect logic.
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
 
@@ -44,8 +44,31 @@ export function useWebSocket(projectId: string): UseWebSocketReturn {
   const reconnectTimeout = useRef<NodeJS.Timeout | null>(null);
   const mountedRef = useRef(true);
 
+  const [actualProjectId, setActualProjectId] = useState<string>('');
+
+  // Resolve 'latest' to actual project ID
+  useEffect(() => {
+    if (projectId === 'latest') {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/projects/latest`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.project_id) {
+            setActualProjectId(data.project_id);
+          }
+        })
+        .catch(err => {
+          console.error('[WebSocket] Failed to resolve latest project ID:', err);
+          setActualProjectId(''); // Fall back to empty
+        });
+    } else {
+      setActualProjectId(projectId);
+    }
+  }, [projectId]);
+
   const connect = useCallback(() => {
-    if (!projectId || projectId === 'latest') return;
+    const targetProjectId = actualProjectId;
+    if (!targetProjectId) return;
+
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
     // Clean up existing connection
@@ -56,7 +79,7 @@ export function useWebSocket(projectId: string): UseWebSocketReturn {
 
     setConnectionStatus('connecting');
 
-    const url = `${WS_BASE_URL}/ws/pipeline/${projectId}`;
+    const url = `${WS_BASE_URL}/ws/pipeline/${targetProjectId}`;
 
     try {
       const ws = new WebSocket(url);
@@ -66,7 +89,7 @@ export function useWebSocket(projectId: string): UseWebSocketReturn {
         if (!mountedRef.current) return;
         setConnectionStatus('connected');
         reconnectAttempts.current = 0;
-        console.log(`[WebSocket] Connected to pipeline ${projectId}`);
+        console.log(`[WebSocket] Connected to pipeline ${targetProjectId}`);
       };
 
       ws.onmessage = (event: MessageEvent) => {
@@ -112,7 +135,7 @@ export function useWebSocket(projectId: string): UseWebSocketReturn {
       setConnectionStatus('error');
       scheduleReconnect();
     }
-  }, [projectId]);
+  }, [actualProjectId]);
 
   const scheduleReconnect = useCallback(() => {
     if (reconnectAttempts.current >= MAX_RECONNECT_ATTEMPTS) {
@@ -152,7 +175,6 @@ export function useWebSocket(projectId: string): UseWebSocketReturn {
   // Connect on mount / project change
   useEffect(() => {
     mountedRef.current = true;
-    connect();
 
     return () => {
       mountedRef.current = false;
@@ -169,7 +191,14 @@ export function useWebSocket(projectId: string): UseWebSocketReturn {
         wsRef.current = null;
       }
     };
-  }, [connect]);
+  }, []);
+
+  // Connect when actualProjectId is resolved
+  useEffect(() => {
+    if (actualProjectId && mountedRef.current) {
+      connect();
+    }
+  }, [actualProjectId, connect]);
 
   return {
     messages,
